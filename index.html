@@ -2,167 +2,198 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Break and Make</title>
+<title>Crack the Nutshell</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{margin:0;background:black;color:white;font-family:Arial;text-align:center}
-h1{font-size:clamp(28px,6vw,46px);margin:10px}
-h2{font-weight:normal;font-size:clamp(16px,3vw,22px)}
+body{margin:0;background:#000;color:#fff;font-family:Arial;text-align:center}
+h1{margin-top:15px;font-size:40px}
+#mission{margin:10px;font-size:18px}
 
-.container{max-width:1100px;margin:auto;padding:10px}
-.box{border:2px solid white;padding:10px;margin:10px auto;width:90%;max-width:700px}
-.flex{display:flex;flex-wrap:wrap;gap:20px;justify-content:center}
-.column{flex:1;min-width:260px}
-.materials{border:2px solid white;padding:10px;min-height:160px}
-.workspace{border:2px dashed white;min-height:180px;padding:10px}
-.item{border:1px solid white;padding:6px;margin:6px;display:inline-block;cursor:grab}
-button{background:black;color:white;border:2px solid white;padding:8px 15px;margin:6px;cursor:pointer}
-.bigBtn{font-size:26px;padding:18px 40px;margin-top:20px}
+.container{display:flex;justify-content:center;gap:20px;flex-wrap:wrap}
+.box{border:2px solid #fff;padding:15px;border-radius:10px;min-width:250px}
+#timer{font-size:28px;margin-top:5px}
 
-#popup,#rules,#endScreen{
-position:fixed;top:0;left:0;width:100%;height:100%;
-background:rgba(0,0,0,.95);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:999;
-}
-.redClose{background:red;border:none;color:white;font-size:20px;padding:6px 10px;position:absolute;top:15px;left:15px}
-.topBtns{position:absolute;top:10px;right:10px}
-.timerText{font-size:28px;margin-top:10px}
+.operator{border:2px solid #fff;padding:10px;font-size:26px;margin:5px;cursor:grab;display:inline-block}
+
+.blocks{margin-top:20px}
+.block{width:40px;height:40px;display:inline-block;margin:5px;border-radius:5px;cursor:grab}
+.blue{background:#2b7cff}
+.yellow{background:#ffc400}
+
+.dropZone{border:2px dashed #fff;min-height:60px;margin:15px;padding:10px}
+#chosenOperator{border:2px dashed #fff;min-height:60px;margin:15px;padding:10px;font-size:30px}
+
+button{background:#fff;color:#000;border:none;padding:12px 25px;font-size:18px;margin-top:20px;cursor:pointer}
+
+#endScreen{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:none;justify-content:center;align-items:center;flex-direction:column}
 </style>
 </head>
 
 <body>
+
+<h1>Crack the Nutshell</h1>
+<div id="mission">Break the numbers up before your time runs out.</div>
+
 <div class="container">
+  <div class="box">
+    <h3>Variables</h3>
+    <div id="levelText"></div>
+    <div id="questionText"></div>
+    <div id="timer">03:00</div>
+  </div>
 
-<h1>Break and Make</h1>
-<h2>You are an engineer and must break problems correctly before time runs out.</h2>
-
-<div class="topBtns">
-<button onclick="showRules()">Instructions</button>
-<button onclick="continueGame()">Continue Game</button>
+  <div class="box">
+    <h3>Drag Operator</h3>
+    <div id="operators"></div>
+  </div>
 </div>
 
-<div class="box">
-<div class="timerText">Time Left: <span id="timer">03:00</span></div>
-</div>
+<div class="blocks" id="blocks"></div>
 
-<h2>Workspace</h2>
+<h3>Build your equation</h3>
+<div class="dropZone" id="zoneBlue">Blue Side</div>
+<div id="chosenOperator">?</div>
+<div class="dropZone" id="zoneYellow">Yellow Side</div>
 
-<div class="flex">
-<div class="column">
-<h3>Object to Make</h3>
-<div id="objectBox" class="box"></div>
-</div>
-
-<div class="column">
-<h3>Materials</h3>
-<div id="materials" class="materials"></div>
-</div>
-</div>
-
-<h3>Build Here</h3>
-<div id="workspace" class="workspace"></div>
-
-</div>
-
-<div id="popup">
-<h2>Are you sure that your building will not collapse?</h2>
-<button onclick="closePopup()">Continue</button>
-</div>
-
-<div id="rules">
-<button class="redClose" onclick="closeRules()">✖</button>
-<h2>Rules for Player</h2>
-<p>Drag materials into the workspace in correct order.</p>
-<p>Two wrong steps → structure breaks.</p>
-<p>Finish all projects before time ends to win.</p>
-</div>
+<button onclick="checkAnswer()">Submit Equation</button>
 
 <div id="endScreen">
-<h1 id="endText"></h1>
-<button class="bigBtn" onclick="startGame()">PLAY AGAIN</button>
+  <h1 id="endText"></h1>
+  <button onclick="restart()">Play Again</button>
 </div>
 
 <script>
-let projects=[
-{obj:"🏠 House",order:["⬜ Square","🟫 Rectangle","🔺 Triangle","🔵 Circle","⬛ Chimney"],materials:["⬜ Square","🔺 Triangle","🟫 Rectangle","🔵 Circle","⬛ Chimney"]},
-{obj:"🏊 Pool",order:["🧱 Tiles","🔵 Oval","📏 Long Rod","📏 Short Rod"],materials:["🧱 Tiles","🔵 Oval","📏 Long Rod","📏 Short Rod"]},
-{obj:"🌳 Garden",order:["🟩 Land","🌱 Plants","🪑 Bench","🐦 Birds","🧱 Bricks"],materials:["🌱 Plants","🐦 Birds","🪑 Bench","🟩 Land","🧱 Bricks"]},
-{obj:"🏬 Mall",order:["🧱 Metal Base","🪟 Glass"],materials:["🪟 Glass","🧱 Metal Base"]},
-{obj:"🎭 Theatre",order:["📦 Cuboid","🟫 Stage","🎭 Curtains"],materials:["🎭 Curtains","🟫 Stage","📦 Cuboid"]},
-{obj:"💧 Water Tank",order:["🥫 Cylinder","🔺 Cone","📏 Rod"],materials:["🥫 Cylinder","🔺 Cone","📏 Rod"]},
-{obj:"🚩 Flag Pole",order:["📦 Cuboid","📏 Rod","🇮🇳 Flag"],materials:["📏 Rod","🇮🇳 Flag","📦 Cuboid"]}
+let levels=[
+{ops:["+"],nums:[6,12,10,8,7]},
+{ops:["+","*"],nums:[15,24,36,16,21]},
+{ops:["+","*","/"],nums:[15,28,21,13,14]}
 ];
 
-let index,current,step,mistakes,timerInterval,secondsLeft,warningShown;
-
-function shuffle(a){return a.sort(()=>Math.random()-0.5)}
+let level=0,q=0,selectedOp=null;
+let timerInterval=null;
+let timeLeft=180;
+const timerDisplay=document.getElementById("timer");
 
 function startTimer(){
-clearInterval(timerInterval);
-secondsLeft=180;
-timerInterval=setInterval(()=>{
-secondsLeft--;
-let m=Math.floor(secondsLeft/60).toString().padStart(2,'0');
-let s=(secondsLeft%60).toString().padStart(2,'0');
-document.getElementById("timer").innerText=m+":"+s;
-if(secondsLeft<=0) gameOver(false);
-},1000);
+  clearInterval(timerInterval);
+  timeLeft=180;
+  updateTimerDisplay();
+
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    updateTimerDisplay();
+    if(timeLeft<=0){
+      clearInterval(timerInterval);
+      gameOver(false);
+    }
+  },1000);
 }
 
-function startGame(){
-projects=shuffle(projects);
-index=0;
-endScreen.style.display="none";
-loadProject();
-startTimer();
+function updateTimerDisplay(){
+  let minutes=Math.floor(timeLeft/60);
+  let seconds=timeLeft%60;
+  timerDisplay.innerText=
+    String(minutes).padStart(2,"0")+":"+
+    String(seconds).padStart(2,"0");
 }
 
-function loadProject(){
-current=projects[index];
-step=0;mistakes=0;warningShown=false;
-workspace.innerHTML="";
-objectBox.innerHTML=current.obj;
-materials.innerHTML="";
-current.materials.forEach(m=>{
-let d=document.createElement("div");
-d.className="item";d.innerText=m;d.draggable=true;
-d.ondragstart=e=>e.dataTransfer.setData("text",m);
-materials.appendChild(d);
-});
+function createOperators(){
+  operators.innerHTML="";
+  levels[level].ops.forEach(op=>{
+    let d=document.createElement("div");
+    d.className="operator";
+    d.innerText=op;
+    d.draggable=true;
+    d.ondragstart=e=>e.dataTransfer.setData("op",op);
+    operators.appendChild(d);
+  });
 }
 
-workspace.ondragover=e=>e.preventDefault();
-workspace.ondrop=e=>{
-let item=e.dataTransfer.getData("text");
-let d=document.createElement("div");d.className="item";d.innerText=item;
-workspace.appendChild(d);
-
-if(item!==current.order[step]){
-mistakes++;
-if(!warningShown){popup.style.display="flex";warningShaown=true;}
-if(mistakes>=2)gameOver(false);
-}else{
-step++;
-if(step>=current.order.length){
-index++;
-if(index>=projects.length)gameOver(true);
-else loadProject();
-}
-}
+chosenOperator.ondragover=e=>e.preventDefault();
+chosenOperator.ondrop=e=>{
+  selectedOp=e.dataTransfer.getData("op");
+  chosenOperator.innerText=selectedOp;
 };
 
-function gameOver(win){
-clearInterval(timerInterval);
-endScreen.style.display="flex";
-endText.innerText=win?"YOU WIN 🎉":"GAME OVER";
+function createBlocks(num){
+  blocks.innerHTML="";
+  for(let i=0;i<num;i++){
+    let b=document.createElement("div");
+    b.className="block blue";
+    b.draggable=true;
+    b.ondragstart=e=>e.dataTransfer.setData("color","blue");
+    blocks.appendChild(b);
+
+    let y=document.createElement("div");
+    y.className="block yellow";
+    y.draggable=true;
+    y.ondragstart=e=>e.dataTransfer.setData("color","yellow");
+    blocks.appendChild(y);
+  }
 }
 
-function closePopup(){popup.style.display="none"}
-function showRules(){rules.style.display="flex";clearInterval(timerInterval)}
-function closeRules(){rules.style.display="none"}
-function continueGame(){startTimer()}
+["zoneBlue","zoneYellow"].forEach(id=>{
+  let z=document.getElementById(id);
+  z.ondragover=e=>e.preventDefault();
+  z.ondrop=e=>{
+    let color=e.dataTransfer.getData("color");
+    let block=document.createElement("div");
+    block.className="block "+color;
+    z.appendChild(block);
+  };
+});
 
-startGame();
+function loadQuestion(){
+  if(level>=levels.length) return gameOver(true);
+  if(q>=levels[level].nums.length){level++;q=0;loadQuestion();return;}
+
+  zoneBlue.innerHTML="Blue Side";
+  zoneYellow.innerHTML="Yellow Side";
+  chosenOperator.innerText="?";
+  selectedOp=null;
+
+  levelText.innerText="Level "+(level+1);
+  questionText.innerText="Target Number: "+levels[level].nums[q];
+
+  createOperators();
+  createBlocks(levels[level].nums[q]);
+  startTimer(); // TIMER RESETS EVERY QUESTION
+}
+
+function countBlocks(zone,color){
+  return [...zone.children].filter(b=>b.classList.contains(color)).length;
+}
+
+function checkAnswer(){
+  if(!selectedOp) return alert("Drag an operator!");
+
+  let blue=countBlocks(zoneBlue,"blue");
+  let yellow=countBlocks(zoneYellow,"yellow");
+
+  let result;
+  if(selectedOp=="+") result=blue+yellow;
+  if(selectedOp=="*") result=blue*yellow;
+  if(selectedOp=="/") result=blue/yellow;
+
+  if(result===levels[level].nums[q]){
+    q++; loadQuestion();
+  }else gameOver(false);
+}
+
+function gameOver(win){
+  clearInterval(timerInterval);
+  endScreen.style.display="flex";
+  endText.innerText=win?"YOU WON":"GAME OVER";
+}
+
+function restart(){
+  level=0;q=0;
+  endScreen.style.display="none";
+  loadQuestion();
+}
+
+loadQuestion();
 </script>
 </body>
 </html>
